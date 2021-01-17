@@ -1,0 +1,28 @@
+!/bin/bash
+
+senderaddr="B62qnvpesY7HSVaRz5TM1PtRmDxhaaifdrE84vwUHqtt2XpgsuBGhk2"
+receiveraddr="B62qnvpesY7HSVaRz5TM1PtRmDxhaaifdrE84vwUHqtt2XpgsuBGhk2"
+
+min=400
+max=600
+
+echo "*** Start Sending Transaction ***"
+echo ""
+
+for ((i = 0 ; i < 100 ; i++)); do
+    amount=$( bc -l <<< "scale=4 ; $((RANDOM % 10000 ))/10000" )
+    fee=$(( ( RANDOM % ($max - $min) )  + $min ))
+
+    echo "In" $i "transaction sent" $amount "Mina with fee" $fee
+
+    coda client send-payment \
+         -amount $amount \
+         -receiver $receiveraddr \
+         -fee $fee \
+         -sender $senderaddr
+    sleep $[ (180 + $RANDOM % 10 ) ]s
+
+echo "----------------------------" $i
+done
+echo ""
+echo "*** END ***"
