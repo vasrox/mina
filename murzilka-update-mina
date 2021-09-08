@@ -1,0 +1,29 @@
+wget -O ~/peers.txt https://storage.googleapis.com/mina-seed-lists/mainnet_seeds.txt
+
+systemctl --user stop mina && systemctl stop mina-bp-stats-sidecar
+sudo apt-get remove mina-mainnet
+
+echo "deb [trusted=yes] http://packages.o1test.net stretch beta" | sudo tee /etc/apt/sources.list.d/mina-beta.list
+sudo apt-get update
+sudo apt-get install -y mina-mainnet=1.2.0beta5-260701a
+
+# для аптайм-сабмита нужен импорт иначе рестарт - пишут что нужен запущенный демон, но вроде и так норм 
+# в этот раз импорт сохранит ключ на сервере, после перезагрузки будет работать - один раз делаем
+export KEYPATH=$HOME/keys/my-wallet
+mina accounts import -privkey-path $KEYPATH
+
+nano .mina-env
+# добавляем --uptime-submitter --uptime-url и UPTIME_PRIVKEY_PASS!
+CODA_PRIVKEY_PASS="PASS"
+UPTIME_PRIVKEY_PASS="PASS"
+EXTRA_FLAGS=" --limited-graphql-port 3095 --uptime-submitter B62qkHM9NT3nDefqUvSMe8qnfEfeXipqkzZrvoBXpfaC9m2BdYjWVJA --uptime-url http://34.134.227.208/v1/submit -snark-worker-fee 0.120 -file-log-level Debug"
+#
+
+systemctl --user daemon-reload
+systemctl --user restart mina
+systemctl restart mina-bp-stats-sidecar
+journalctl --user-unit mina -n 100 -f | ccze
+
+mina version
+# Chain id:     5f704cc0c82e0ed70e873f0893d7e06f148524e3f0bdae2afb02e7819a0c24d1
+# Git SHA-1:    260701a0b82dc2093f95b9bae6e91f17cea34391
